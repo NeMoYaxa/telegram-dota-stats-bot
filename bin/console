@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "telegram_dota_stats_bot"
+
+require "irb"
+IRB.start(__FILE__)
