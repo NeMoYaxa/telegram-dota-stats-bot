@@ -24,9 +24,9 @@ module TelegramDotaStatsBot
               seasonRank
             }
             matchCount
-            winCount#{" "}
-          }#{" "}
-        }#{" "}
+            winCount
+          }
+        }
       GQL
 
       response = HTTParty.post(
