@@ -3,16 +3,11 @@
 require "dotenv/load"
 require "httparty"
 require "json"
+require_relative "client"
 
 module TelegramDotaStatsBot
   class Player
-    STRATZ_GRAPHQL = "https://api.stratz.com/graphql"
-
     def fetch_player(steam_id)
-      token = ENV.fetch("STRATZ_TOKEN", nil)
-
-      puts "Ошибка: STRATZ_TOKEN не найден в .env файле." if token.nil?
-
       query = <<~GQL
         {
           player(steamAccountId: #{steam_id}) {
@@ -29,14 +24,7 @@ module TelegramDotaStatsBot
         }
       GQL
 
-      response = HTTParty.post(
-        STRATZ_GRAPHQL,
-        headers: {
-          "Authorization" => "Bearer #{token}",
-          "Content-Type" => "application/json"
-        },
-        body: { query: query }.to_json
-      )
+      response = Client.query(query)
 
       response.body
     end

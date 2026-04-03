@@ -6,13 +6,13 @@ WebMock.allow_net_connect!
 class TestPlayer < Minitest::Test
   def setup
     @player = TelegramDotaStatsBot::Player.new
-    @url = TelegramDotaStatsBot::Player::STRATZ_GRAPHQL
+    @url = TelegramDotaStatsBot::Client::STRATZ_GRAPHQL
     @steam_id = 1234567890
 
     ENV["STRATZ_TOKEN"] = "test_token_123"
   end
 
-  def test_fetch_player_return_json_200
+  def test_fetch_player_returns_json_200
     fake_json = <<~JSON
       {
         "data": {
@@ -36,7 +36,7 @@ class TestPlayer < Minitest::Test
     assert_equal fake_json, @player.fetch_player(@steam_id)
   end
 
-  def test_parse_player_return_correct_hash
+  def test_parse_player_returns_correct_hash
     fake_json = <<~JSON
       {
         "data": {
@@ -73,7 +73,7 @@ class TestPlayer < Minitest::Test
     assert_equal expected_info, player_data
   end
 
-  def test_parse_rates_nil_hash_return_nil
+  def test_parse_rates_nil_hash_returns_nil
     fake_json = nil
 
     stub_request(:post, @url).to_return(status: 200, body: fake_json)
@@ -81,7 +81,7 @@ class TestPlayer < Minitest::Test
     assert_nil @player.parse_player(@steam_id)
   end
 
-  def test_parse_rates_empty_hash_return_nil
+  def test_parse_rates_empty_hash_returns_nil
     fake_json = ""
 
     stub_request(:post, @url).to_return(status: 200, body: fake_json)
@@ -89,7 +89,7 @@ class TestPlayer < Minitest::Test
     assert_nil @player.parse_player(@steam_id)
   end
 
-  def test_parse_rates_graphql_errors_return_nil
+  def test_parse_rates_graphql_errors_returns_nil
     fake_json = <<~JSON
       {
         "errors": [
@@ -105,7 +105,7 @@ class TestPlayer < Minitest::Test
     assert_nil @player.parse_player(@steam_id)
   end
 
-  def test_parse_rates_graphql_no_player_return_nil
+  def test_parse_rates_graphql_no_player_returns_nil
     fake_json = <<~JSON
       {
          "message": "Some GraphQL error"
@@ -117,7 +117,7 @@ class TestPlayer < Minitest::Test
     assert_nil @player.parse_player(@steam_id)
   end
 
-  def test_parse_rates_error_json_return_nil
+  def test_parse_rates_error_json_returns_nil
     fake_json = "abba"
 
     stub_request(:post, @url).to_return(status: 200, body: fake_json)

@@ -14,13 +14,29 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  rubocop:
     runs-on: ubuntu-latest
-    name: Ruby ${{ matrix.ruby }}
+    name: RuboCop
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0.2'
+      - name: Run RuboCop
+        run: bundle exec rubocop
+
+  test:
+    runs-on: ubuntu-latest
+    name: ${{ matrix.test_file }} (Ruby ${{ matrix.ruby }})
     strategy:
+      fail-fast: false
       matrix:
         ruby:
           - '4.0.2'
+        test_file:
+          - test_client
+          - test_player
 
     steps:
       - uses: actions/checkout@v6
@@ -31,5 +47,5 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - name: Run the default task
-        run: bundle exec rake
+      - name: Run specific test
+        run: bundle exec ruby -Ilib -Itest test/${{ matrix.test_file }}.rb
