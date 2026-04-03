@@ -3,6 +3,7 @@
 require "telegram/bot"
 require "dotenv/load"
 require_relative "telegram_dota_stats_bot/version"
+require_relative "telegram_dota_stats_bot/player"
 
 module TelegramDotaStatsBot
   class Error < StandardError; end
