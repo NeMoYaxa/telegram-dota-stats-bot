@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "test_helper"
-WebMock.allow_net_connect!
 
 class TestMatch < Minitest::Test
   def setup
@@ -28,7 +27,7 @@ class TestMatch < Minitest::Test
       }
     JSON
 
-    stub_request(:post, @url).to_return(status: 200, body:fake_json)
+    stub_request(:post, @url).to_return(status: 200, body: fake_json)
 
     assert_equal fake_json, @match.fetch_match(@match_id)
   end

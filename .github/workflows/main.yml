@@ -40,6 +40,8 @@ jobs:
         test_file:
           - test_client
           - test_player
+          - test_match
+          - test_stats_info
 
     steps:
       - uses: actions/checkout@v6
