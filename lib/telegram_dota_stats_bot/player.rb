@@ -4,9 +4,12 @@ require "dotenv/load"
 require "httparty"
 require "json"
 require_relative "client"
+require_relative "stats_info"
 
 module TelegramDotaStatsBot
   class Player
+    include StatsInfo
+
     def fetch_player(steam_id)
       query = <<~GQL
         {
@@ -68,29 +71,6 @@ module TelegramDotaStatsBot
     end
 
     private
-
-    def rank_to_medal(rank)
-      return "Калибровка" if rank.nil? || rank.negative?
-
-      case rank
-      when 0..9
-        "Рекрут"
-      when 10..19
-        "Страж"
-      when 20..29
-        "Рыцарь"
-      when 30..39
-        "Герой"
-      when 40..49
-        "Легенда"
-      when 50..59
-        "Властелин"
-      when 60..79
-        "Божество"
-      else
-        "Титан"
-      end
-    end
 
     def calculate_win_rate(total, wins)
       return 0 if total.nil? || total.zero?
