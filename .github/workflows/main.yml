@@ -31,6 +31,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    env:
+      TZ: Europe/Moscow
     name: ${{ matrix.test_file }} (Ruby ${{ matrix.ruby }})
     strategy:
       fail-fast: false
