@@ -51,12 +51,12 @@ module TelegramDotaStatsBot
         {
           id: match["id"],
           didRadiantWin: match["didRadiantWin"],
-          durationSeconds: match["durationSeconds"],
-          startDateTime: match["startDateTime"],
-          endDateTime: match["endDateTime"],
+          durationSeconds: match_duration_to_string_time(match["durationSeconds"]),
+          startDateTime: Time.at(match["startDateTime"]).to_s,
+          endDateTime: Time.at(match["endDateTime"]).to_s,
           lobbyType: match["lobbyType"],
           rank: rank_to_medal(match["rank"]),
-          regionId: match["regionId"]
+          regionId: region_id_to_client_name(match["regionId"])
         }
       rescue JSON::JSONError => e
         puts "Ошибка парсинга JSON: #{e.message}"

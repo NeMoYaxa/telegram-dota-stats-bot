@@ -43,6 +43,18 @@ class TestStatsInfo < Minitest::Test
     @url = TelegramDotaStatsBot::Client::STRATZ_GRAPHQL
   end
 
+  def test_match_duration_to_string_time_returns_nil
+    assert_nil match_duration_to_string_time(nil)
+  end
+
+  def test_match_duration_to_string_time_returns_correct_data1
+    assert_equal "20мин. 34сек.", match_duration_to_string_time(1234)
+  end
+
+  def test_match_duration_to_string_time_returns_correct_data2
+    assert_equal "10мин. 0сек.", match_duration_to_string_time(600)
+  end
+
   def test_rank_to_medal_nil
     medal_nil = rank_to_medal(nil)
 

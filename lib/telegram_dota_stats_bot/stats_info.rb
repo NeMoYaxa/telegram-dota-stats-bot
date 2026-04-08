@@ -4,6 +4,12 @@ require_relative "client"
 
 module TelegramDotaStatsBot
   module StatsInfo
+    def match_duration_to_string_time(seconds)
+      return nil if seconds.nil?
+
+      "#{seconds / 60}мин. #{seconds % 60}сек."
+    end
+
     def rank_to_medal(rank)
       return "Калибровка" if rank.nil? || rank.negative?
 
