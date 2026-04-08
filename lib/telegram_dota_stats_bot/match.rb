@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
 require_relative "client"
+require_relative "stats_info"
 
 module TelegramDotaStatsBot
   class Match
+    include StatsInfo
+
     def fetch_match(match_id)
       query = <<~GQL
         {
@@ -16,8 +19,8 @@ module TelegramDotaStatsBot
             lobbyType
             rank
             regionId
-          }#{"   "}
-        }#{"   "}
+          }
+        }
       GQL
 
       response = Client.query(query)
@@ -33,11 +36,17 @@ module TelegramDotaStatsBot
       begin
         data = JSON.parse(json)
 
-        puts "GraphQL ошибка: #{data["errors"]}" if data["errors"]
+        if data["errors"]
+          puts "GraphQL ошибка: #{data["errors"]}"
+          return nil
+        end
 
         match = data.dig("data", "match")
 
-        puts "Матч c ID: #{match_id} не найден." if match.nil?
+        if match.nil?
+          puts "Игрок с ID: #{match_id} не найден."
+          return nil
+        end
 
         {
           id: match["id"],
@@ -46,7 +55,7 @@ module TelegramDotaStatsBot
           startDateTime: match["startDateTime"],
           endDateTime: match["endDateTime"],
           lobbyType: match["lobbyType"],
-          rank: match["rank"],
+          rank: rank_to_medal(match["rank"]),
           regionId: match["regionId"]
         }
       rescue JSON::JSONError => e
