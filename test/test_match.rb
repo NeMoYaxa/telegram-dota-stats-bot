@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "test_helper"
-WebMock.allow_net_connect!
 
 class TestMatch < Minitest::Test
   def setup
@@ -28,12 +27,26 @@ class TestMatch < Minitest::Test
       }
     JSON
 
-    stub_request(:post, @url).to_return(status: 200, body:fake_json)
+    stub_request(:post, @url).to_return(status: 200, body: fake_json)
 
     assert_equal fake_json, @match.fetch_match(@match_id)
   end
 
   def test_parse_match_returns_correct_hash
+    fake_regions_json = <<~JSON
+      {
+        "data": {
+          "constants": {
+            "regions": [
+              { "id": 8,  "name": "Stockholm", "clientName": "Russia" }
+            ]
+          }
+        }
+      }
+    JSON
+
+    stub_request(:post, @url).with(body: /constants/).to_return(status: 200, body: fake_regions_json)
+
     fake_json = <<~JSON
       {
         "data": {
@@ -51,19 +64,19 @@ class TestMatch < Minitest::Test
       }
     JSON
 
-    stub_request(:post, @url).to_return(status: 200, body: fake_json)
+    stub_request(:post, @url).with(body: /match/).to_return(status: 200, body: fake_json)
 
     match_data = @match.parse_match(@match_id)
 
     expected_data = {
       id: 1234567890,
       didRadiantWin: true,
-      durationSeconds: 1234,
-      startDateTime: 10000,
-      endDateTime: 11234,
+      durationSeconds: "20мин. 34сек.",
+      startDateTime: "1970-01-01 05:46:40 +0300",
+      endDateTime: "1970-01-01 06:07:14 +0300",
       lobbyType: "RANKED",
       rank: "Титан",
-      regionId: 8
+      regionId: "Russia"
     }
 
     assert_equal expected_data, match_data

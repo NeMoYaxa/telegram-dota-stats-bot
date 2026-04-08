@@ -31,6 +31,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    env:
+      TZ: Europe/Moscow
     name: ${{ matrix.test_file }} (Ruby ${{ matrix.ruby }})
     strategy:
       fail-fast: false
@@ -40,6 +42,8 @@ jobs:
         test_file:
           - test_client
           - test_player
+          - test_match
+          - test_stats_info
 
     steps:
       - uses: actions/checkout@v6
