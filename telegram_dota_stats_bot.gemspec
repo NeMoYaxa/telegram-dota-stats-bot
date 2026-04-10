@@ -5,18 +5,17 @@ require_relative "lib/telegram_dota_stats_bot/version"
 Gem::Specification.new do |spec|
   spec.name = "telegram_dota_stats_bot"
   spec.version = TelegramDotaStatsBot::VERSION
-  spec.authors = ["Yakov"]
+  spec.authors = ["Batuev Yakov Denisovich"]
   spec.email = ["yaxa499@gmail.com"]
 
-  spec.summary = "."
-  spec.description = "."
-  spec.homepage = "."
+  spec.summary = "Телеграм-бот для отслеживания статистики Dota 2."
+  spec.description = "Telegram-бот на Ruby, который с помощью API STRATZ отображает статистику игроков, матчей и героев в Dota 2."
+  spec.homepage = "https://github.com/NeMoYaxa/telegram-dota-stats-bot"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
-  spec.metadata["allowed_push_host"] = ""
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "."
-  spec.metadata["changelog_uri"] = "."
+  spec.metadata["source_code_uri"] = "https://github.com/NeMoYaxa/telegram-dota-stats-bot"
+  spec.metadata["changelog_uri"] = "https://github.com/NeMoYaxa/telegram-dota-stats-bot/blob/main/CHANGELOG.md"
   spec.metadata["rubygems_mfa_required"] = "true"
 
   gemspec = File.basename(__FILE__)
