@@ -37,3 +37,6 @@ Metrics/CyclomaticComplexity:
 Layout/LineLength:
   Exclude:
     - "telegram_dota_stats_bot.gemspec"
+    -
+Metrics/ModuleLength:
+  Max: 150
