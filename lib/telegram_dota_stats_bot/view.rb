@@ -19,14 +19,37 @@ module TelegramDotaStatsBot
       )
     end
 
-    def self.render_player_stats(data)
+    def self.render_player_stats(player_data)
+      line = "➖➖➖➖➖➖➖➖➖➖➖➖"
+
       [
-        "🔑 <b>ID:</b> <code>#{data[:id]}</code>",
-        "👤 <b>Игрок:</b> <a href='#{data[:profile_uri]}'>#{data[:name]}</a>",
-        "🏆 <b>Ранг:</b> #{data[:season_rank]}",
-        "🎮 <b>Всего игр:</b> #{data[:match_count]}",
-        "📈 <b>Винрейт:</b> #{data[:win_rate]}%",
-        "✨ <b>Dota Plus:</b> #{data[:is_dota_plus_subscriber] ? "Есть" : "Нет"}"
+        "📝 Данные об аккаунте",
+        line,
+        "🔑 <b>ID:</b> <code>#{player_data[:id]}</code>",
+        "👤 <b>Игрок:</b> <a href='#{player_data[:profile_uri]}'>#{player_data[:name]}</a>",
+        "🏆 <b>Ранг:</b> #{player_data[:season_rank]}",
+        "🎮 <b>Всего игр:</b> #{player_data[:match_count]}",
+        "📈 <b>Винрейт:</b> #{player_data[:win_rate]}%",
+        "✨ <b>Dota Plus:</b> #{player_data[:is_dota_plus_subscriber] ? "Есть" : "Нет"}"
+      ].join("\n")
+    end
+
+    def self.render_match_stats(match_data)
+      line = "➖➖➖➖➖➖➖➖➖➖➖➖"
+      win_status = match_data[:didRadiantWin] ? "🟢 <b>Победа Radiant</b>" : "🔴 <b>Победа Dire</b>"
+
+      [
+        "📊 <b>Информация о матче</b>",
+        line,
+        "⚔️ <b>Match ID:</b> <code>#{match_data[:id]}</code>",
+        win_status,
+        "⏳ <b>Длительность:</b> #{match_data[:durationSeconds]}",
+        "🏆 <b>Средний ранг:</b> #{match_data[:rank]}",
+        "🌍 <b>Регион:</b> #{match_data[:regionId]}",
+        "🎮 <b>Тип лобби:</b> #{match_data[:lobbyType]}",
+        line,
+        "📅 <b>Начало:</b> #{match_data[:startDateTime]}",
+        "🏁 <b>Конец:</b>  #{match_data[:endDateTime]}"
       ].join("\n")
     end
   end
