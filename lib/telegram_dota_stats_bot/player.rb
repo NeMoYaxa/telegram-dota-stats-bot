@@ -70,6 +70,67 @@ module TelegramDotaStatsBot
       end
     end
 
+    def fetch_last_matches(steam_id, count_matches)
+      query = <<~GQL
+        {
+          player(steamAccountId: #{steam_id}) {
+            matches(request: {take: #{count_matches}, skip: 0}) {
+              id
+              didRadiantWin
+              durationSeconds
+              startDateTime
+              endDateTime
+              lobbyType
+              rank
+              regionId
+            }
+          }
+        }
+      GQL
+
+      response = Client.query(query)
+
+      response.body
+    end
+
+    def parse_last_matches(steam_id, count_matches)
+      json = fetch_last_matches(steam_id, count_matches)
+
+      return nil if json.nil? || json.empty?
+
+      begin
+        data = JSON.parse(json)
+
+        if data["errors"]
+          puts "GraphQL ошибка: #{data["errors"]}"
+          return nil
+        end
+
+        matches_data = data.dig("data", "player", "matches")
+
+        if matches_data.nil?
+          puts "Не удалось получить последние #{count_matches} матчей."
+          return nil
+        end
+
+        matches_data.map do |match|
+          {
+            id: match["id"],
+            didRadiantWin: match["didRadiantWin"],
+            durationSeconds: match_duration_to_string_time(match["durationSeconds"]),
+            startDateTime: Time.at(match["startDateTime"]).to_s,
+            endDateTime: Time.at(match["endDateTime"]).to_s,
+            lobbyType: match["lobbyType"],
+            rank: rank_to_medal(match["rank"]),
+            regionId: region_id_to_client_name(match["regionId"])
+          }
+        end
+      rescue JSON::JSONError => e
+        puts "Ошибка парсинга JSON: #{e.message}"
+        nil
+      end
+    end
+
     private
 
     def calculate_win_rate(total, wins)
