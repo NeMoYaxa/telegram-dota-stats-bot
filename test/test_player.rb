@@ -141,4 +141,134 @@ class TestPlayer < Minitest::Test
 
     assert_equal 55.0, win_rate
   end
+
+  def test_fetch_last_matches_returns_json_200
+    fake_json = <<~JSON
+      {
+        "data": {
+          "player": {
+            "matches": [
+              {"id":8767026994,"didRadiantWin":false,"durationSeconds":2634,"startDateTime":1775911947,"endDateTime":1775914581,"lobbyType":"RANKED","rank":80,"regionId":8},
+              {"id":8766963195,"didRadiantWin":true,"durationSeconds":2213,"startDateTime":1775909348,"endDateTime":1775911561,"lobbyType":"RANKED","rank":74,"regionId":8},
+              {"id":8766883730,"didRadiantWin":true,"durationSeconds":3116,"startDateTime":1775905707,"endDateTime":1775908823,"lobbyType":"RANKED","rank":74,"regionId":8}
+            ]
+          }
+        }
+      } 
+    JSON
+
+    stub_request(:post, @url).to_return(status: 200, body: fake_json)
+
+    assert_equal fake_json, @player.fetch_last_matches(@steam_id, 3)
+  end
+
+  def test_parse_matches_returns_correct_hash
+    fake_regions_json = <<~JSON
+      {
+        "data": {
+          "constants": {
+            "regions": [
+              { "id": 8,  "name": "Stockholm", "clientName": "Russia" }
+            ]
+          }
+        }
+      }
+    JSON
+
+    stub_request(:post, @url).with(body: /constants/).to_return(status: 200, body: fake_regions_json)
+
+    fake_json = <<~JSON
+      {
+        "data": {
+          "player": {
+            "matches": [
+              {"id":8767026994,"didRadiantWin":false,"durationSeconds":2634,"startDateTime":1775911947,"endDateTime":1775914581,"lobbyType":"RANKED","rank":80,"regionId":8},
+              {"id":8766963195,"didRadiantWin":true,"durationSeconds":2213,"startDateTime":1775909348,"endDateTime":1775911561,"lobbyType":"RANKED","rank":74,"regionId":8}
+            ]
+          }
+        }
+      } 
+    JSON
+
+    stub_request(:post, @url).with(body: /match/).to_return(status: 200, body: fake_json)
+
+    matches_data = @player.parse_last_matches(@steam_id, 2)
+
+    expected_info = [
+      {
+        id: 8767026994,
+        didRadiantWin: false,
+        durationSeconds: "43мин. 54сек.",
+        startDateTime: "2026-04-11 15:52:27 +0300",
+        endDateTime: "2026-04-11 16:36:21 +0300",
+        lobbyType: "RANKED",
+        rank: "Титан",
+        regionId: "Russia"
+      },
+      {
+        id: 8766963195,
+        didRadiantWin: true,
+        durationSeconds: "36мин. 53сек.",
+        startDateTime: "2026-04-11 15:09:08 +0300",
+        endDateTime: "2026-04-11 15:46:01 +0300",
+        lobbyType: "RANKED",
+        rank: "Божество",
+        regionId: "Russia"
+      }
+    ]
+
+    assert_equal expected_info, matches_data
+  end
+
+  def test_parse_matches_nil_hash_returns_nil
+    fake_json = nil
+
+    stub_request(:post, @url).to_return(status: 200, body: fake_json)
+
+    assert_nil @player.parse_last_matches(@steam_id, 10)
+  end
+
+  def test_parse_matches_empty_hash_returns_nil
+    fake_json = ""
+
+    stub_request(:post, @url).to_return(status: 200, body: fake_json)
+
+    assert_nil @player.parse_last_matches(@steam_id, 10)
+  end
+
+  def test_parse_matches_graphql_errors_returns_nil
+    fake_json = <<~JSON
+      {
+        "errors": [
+          {
+            "message": "Some GraphQL error"
+          }
+        ]
+      }
+    JSON
+
+    stub_request(:post, @url).to_return(status: 200, body: fake_json)
+
+    assert_nil @player.parse_last_matches(@steam_id, 10)
+  end
+
+  def test_parse_matches_graphql_no_player_returns_nil
+    fake_json = <<~JSON
+      {
+         "message": "Some GraphQL error"
+      }
+    JSON
+
+    stub_request(:post, @url).to_return(status: 200, body: fake_json)
+
+    assert_nil @player.parse_last_matches(@steam_id, 10)
+  end
+
+  def test_parse_matches_error_json_returns_nil
+    fake_json = "abba"
+
+    stub_request(:post, @url).to_return(status: 200, body: fake_json)
+
+    assert_nil @player.parse_last_matches(@steam_id, 10)
+  end
 end
