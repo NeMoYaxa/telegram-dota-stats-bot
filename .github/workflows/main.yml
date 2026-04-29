@@ -44,6 +44,7 @@ jobs:
           - test_player
           - test_match
           - test_stats_info
+          - test_hero
 
     steps:
       - uses: actions/checkout@v6
