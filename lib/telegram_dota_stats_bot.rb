@@ -7,6 +7,7 @@ require_relative "telegram_dota_stats_bot/version"
 require_relative "telegram_dota_stats_bot/view"
 require_relative "telegram_dota_stats_bot/player"
 require_relative "telegram_dota_stats_bot/match"
+require_relative "telegram_dota_stats_bot/hero"
 
 module TelegramDotaStatsBot
   class Error < StandardError; end
@@ -37,55 +38,70 @@ module TelegramDotaStatsBot
         user_info = "#{message.from.id} (@#{message.from.username})"
         @states ||= {}
 
-        case message.text
-        when "/start"
-          log.info("#{user_info} запустил бота")
+        case message
+        when Telegram::Bot::Types::CallbackQuery
+          if message.data.start_with?("hero_")
+            hero_id = message.data.split("_").last
+            hero_data = Hero.new.fetch_hero_details(hero_id)
 
-          bot.api.send_message(
-            chat_id: message.chat.id,
-            text: "Приветствуем тебя в DotaStats.",
-            reply_markup: View.main_menu
-          )
-        when "👤 Посмотреть профиль игрока"
-          log.info("#{user_info} выбрал '👤 Посмотреть профиль игрока'")
+            bot.api.send_message(
+              chat_id: message.message.chat.id,
+              text: View.render_hero_stats(hero_data),
+              parse_mode: "HTML"
+            )
+          end
+          bot.api.answer_callback_query(callback_query_id: message.id)
 
-          @states[message.from.id] = :waiting_player_id
+        when Telegram::Bot::Types::Message
+          case message.text
+          when "/start"
+            log.info("#{user_info} запустил бота")
+            bot.api.send_message(
+              chat_id: message.chat.id,
+              text: "Приветствуем тебя в DotaStats.",
+              reply_markup: View.main_menu
+            )
+          when "👤 Посмотреть профиль игрока"
+            log.info("#{user_info} выбрал '👤 Посмотреть профиль игрока'")
+            @states[message.from.id] = :waiting_player_id
+            bot.api.send_message(chat_id: message.chat.id, text: "Введите id игрока:")
 
-          log.debug("#{user_info} перешел в состояние :waiting_player_id")
+          when "📊 Посмотреть статистику матча"
+            log.info("#{user_info} выбрал '📊 Посмотреть статистику матча'")
+            @states[message.from.id] = :waiting_match_id
+            bot.api.send_message(chat_id: message.chat.id, text: "Введите id матча:")
 
-          bot.api.send_message(
-            chat_id: message.chat.id,
-            text: "Введите id игрока:"
-          )
-        when "📊 Посмотреть статистику матча"
-          log.info("#{user_info} выбрал '📊 Посмотреть статистику матча'")
+          when "🦸 Топ героев по позициям"
+            log.info("#{user_info} выбрал просмотр позиций")
+            bot.api.send_message(
+              chat_id: message.chat.id,
+              text: "Выбери позицию:",
+              reply_markup: View.positions_menu
+            )
 
-          @states[message.from.id] = :waiting_match_id
+          when /^Позиция (\d)$/
+            pos = Regexp.last_match(1).to_i
+            heroes = Hero.new.fetch_recommended(pos)
+            kb = heroes.map do |h|
+              [Telegram::Bot::Types::InlineKeyboardButton.new(
+                text: "#{h[:name]} (#{h[:win_rate]}%)",
+                callback_data: "hero_#{h[:id]}"
+              )]
+            end
+            markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: kb)
+            bot.api.send_message(chat_id: message.chat.id, text: "Топ-3 героя на позицию #{pos}:", reply_markup: markup)
 
-          log.debug("#{user_info} перешел в состояние :waiting_match_id")
-
-          bot.api.send_message(
-            chat_id: message.chat.id,
-            text: "Введите id матча:"
-          )
-        else
-          case @states[message.from.id]
-          when :waiting_player_id
-            log.info("Получен ввод ID игрока от #{user_info}: #{message.text}")
-
-            player_request(bot, message, user_info)
-
-            log.info("Состояние для #{user_info} сброшено в nil")
-
-            @states[message.from.id] = nil
-          when :waiting_match_id
-            log.info("Получен ввод ID матча от #{user_info}: #{message.text}")
-
-            match_request(bot, message, user_info)
-
-            log.info("Состояние для #{user_info} сброшено в nil")
-
-            @states[message.from.id] = nil
+          else
+            case @states[message.from.id]
+            when :waiting_player_id
+              log.info("Получен ввод ID игрока от #{user_info}: #{message.text}")
+              player_request(bot, message, user_info)
+              @states[message.from.id] = nil
+            when :waiting_match_id
+              log.info("Получен ввод ID матча от #{user_info}: #{message.text}")
+              match_request(bot, message, user_info)
+              @states[message.from.id] = nil
+            end
           end
         end
       end
@@ -97,12 +113,10 @@ module TelegramDotaStatsBot
 
   def self.player_request(bot, message, user_info)
     log.info("Парсинг игрока #{message.text} для #{user_info}")
-
     player_data = Player.new.parse_player(message.text)
 
     if player_data.nil?
       log.warn("Игрок #{message.text} не найден для #{user_info}")
-
       bot.api.send_message(
         chat_id: message.chat.id,
         text: "Игрок с id <code>#{message.text}</code> не найден.",
@@ -111,8 +125,6 @@ module TelegramDotaStatsBot
       )
     else
       log.info("Игрок #{message.text} успешно получен для #{user_info}")
-      log.debug("Данные игрока: #{player_data.inspect}")
-
       bot.api.send_message(
         chat_id: message.chat.id,
         text: View.render_player_stats(player_data),
@@ -125,12 +137,10 @@ module TelegramDotaStatsBot
 
   def self.match_request(bot, message, user_info)
     log.info("Парсинг матча #{message.text} для #{user_info}")
-
     match_data = Match.new.parse_match(message.text)
 
     if match_data.nil?
       log.warn("Матч #{message.text} не найден для #{user_info}")
-
       bot.api.send_message(
         chat_id: message.chat.id,
         text: "Матч с id <code>#{message.text}</code> не найден.",
@@ -139,8 +149,6 @@ module TelegramDotaStatsBot
       )
     else
       log.info("Матч #{message.text} успешно получен для #{user_info}")
-      log.debug("Данные матча: #{match_data.inspect}")
-
       bot.api.send_message(
         chat_id: message.chat.id,
         text: View.render_match_stats(match_data),

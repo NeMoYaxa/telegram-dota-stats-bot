@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require_relative "test_helper"
 
 class TestHero < Minitest::Test
   def setup
+    ENV["STRATZ_TOKEN"] = "fake_token"
     @hero = TelegramDotaStatsBot::Hero.new
     @url = TelegramDotaStatsBot::Client::STRATZ_GRAPHQL
   end

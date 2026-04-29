@@ -9,7 +9,8 @@ module TelegramDotaStatsBot
     def self.main_menu
       kb = [
         [button("👤 Посмотреть профиль игрока")],
-        [button("📊 Посмотреть статистику матча")]
+        [button("📊 Посмотреть статистику матча")],
+        [button("🦸 Выбор героя (Топ по позициям)")]
       ]
 
       Telegram::Bot::Types::ReplyKeyboardMarkup.new(
@@ -51,6 +52,20 @@ module TelegramDotaStatsBot
         "📅 <b>Начало:</b> #{match_data[:startDateTime]}",
         "🏁 <b>Конец:</b>  #{match_data[:endDateTime]}"
       ].join("\n")
+    end
+
+    def self.render_hero_stats(hero_data)
+      [
+        "<b>#{hero_data[:name]}</b>",
+        "📈 Винрейт: #{hero_data[:win_rate]}%",
+        "👟 Рекомендованный предмет: <code>ID #{hero_data[:suggested_boots_id]}</code>",
+        "<a href='#{hero_data[:icon_url]}'>&#8205;</a>" # Фокус, чтобы картинка отобразилась
+      ].join("\n")
+    end
+
+    def self.positions_menu
+      kb = (1..5).map { |i| [button("Позиция #{i}")] }
+      Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: kb, resize_keyboard: true)
     end
   end
 end
