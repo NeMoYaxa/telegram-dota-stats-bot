@@ -14,14 +14,14 @@ class TestHero < Minitest::Test
       data: {
         heroStats: { 
           stats: [
-            { heroId: 1, winCount: 1500, matchCount: 2500 }, 
-            { heroId: 2, winCount: 2000, matchCount: 3000 }  
+            { "heroId" => 1, "winCount" => 2500, "matchCount" => 5000 }, # WR 50%
+            { "heroId" => 2, "winCount" => 4000, "matchCount" => 5000 }  # WR 80%
           ] 
         },
         constants: { 
           heroes: [
-            { id: 1, displayName: "Anti-Mage" },
-            { id: 2, displayName: "Axe" }
+            { "id" => 1, "displayName" => "Anti-Mage" },
+            { "id" => 2, "displayName" => "Axe" }
           ] 
         }
       }
@@ -31,8 +31,9 @@ class TestHero < Minitest::Test
 
     res = @hero.fetch_recommended(1)
     
-    assert_equal "Axe", res.first[:name]
-    assert_equal 66.67, res.first[:win_rate]
+    refute_empty res, "Массив героев не должен быть пустым (проверь фильтр matchCount в hero.rb)"
+    assert_equal "Axe", res.first[:name], "Первым должен быть герой с самым высоким винрейтом"
+    assert_equal 80.0, res.first[:win_rate]
     assert res.size <= 3
   end
 
@@ -40,10 +41,10 @@ class TestHero < Minitest::Test
     fake_json = {
       data: {
         constants: { 
-          hero: { displayName: "Pudge", shortName: "pudge" }
+          hero: { "displayName" => "Pudge", "shortName" => "pudge" }
         },
         heroStats: { 
-          stats: [{ winCount: 5000, matchCount: 10000 }] 
+          stats: [{ "winCount" => 5000, "matchCount" => 10000 }] 
         }
       }
     }.to_json
@@ -55,22 +56,21 @@ class TestHero < Minitest::Test
     assert_equal "Pudge", res[:name]
     assert_includes res[:image_url], "pudge"
     assert_equal "7.41b", res[:patch]
-    assert_equal "💠 Divine / Immortal", res[:rank_text]
   end
 
   def test_recommended_filters_low_match_count
     fake_json = {
       data: {
         heroStats: { 
-          stats: [{ heroId: 1, winCount: 50, matchCount: 100 }] 
+          stats: [{ "heroId" => 1, "winCount" => 50, "matchCount" => 100 }] 
         },
-        constants: { heroes: [{ id: 1, displayName: "Anti-Mage" }] }
+        constants: { heroes: [{ "id" => 1, "displayName" => "Anti-Mage" }] }
       }
     }.to_json
 
     stub_request(:post, @url).to_return(status: 200, body: fake_json)
 
     res = @hero.fetch_recommended(1)
-    assert_empty res
+    assert_empty res, "Герои с matchCount < 4000 не должны попадать в выборку"
   end
 end

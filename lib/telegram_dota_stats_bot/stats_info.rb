@@ -65,6 +65,8 @@ module TelegramDotaStatsBot
 
       response = Client.query(query)
 
+      return nil if response.nil?
+
       response.body
     end
 
