@@ -7,14 +7,6 @@ module TelegramDotaStatsBot
   class Hero
     include StatsInfo
 
-    POSITIONS = {
-      1 => "Safelane",
-      2 => "Midlane",
-      3 => "Offlane",
-      4 => "Soft Support",
-      5 => "Hard Support"
-    }.freeze
-
     def fetch_recommended(position_id)
       query = <<~GQL
         {
@@ -25,14 +17,12 @@ module TelegramDotaStatsBot
               matchCount
             }
           }
-          constants {
-            heroes { id, displayName }
-          }
+          constants { heroes { id, displayName } }
         }
       GQL
 
       response = Client.query(query)
-      return [] if response.nil? || response.body.nil? || response.body.empty?
+      return [] unless response
 
       parse_recommended(response.body)
     end
@@ -41,11 +31,7 @@ module TelegramDotaStatsBot
       query = <<~GQL
         {
           constants {
-            hero(id: #{hero_id}) {
-              displayName
-              shortName
-            }
-            gameVersion { name }
+            hero(id: #{hero_id}) { displayName, shortName }
           }
           heroStats {
             stats(heroIds: [#{hero_id}], bracketBasicIds: [DIVINE_IMMORTAL]) {
@@ -57,7 +43,7 @@ module TelegramDotaStatsBot
       GQL
 
       response = Client.query(query)
-      return nil if response.nil? || response.body.nil? || response.body.empty?
+      return nil unless response
 
       parse_hero_details(response.body, hero_id)
     end
@@ -73,6 +59,8 @@ module TelegramDotaStatsBot
         h = heroes_const.find { |hc| hc["id"] == s["heroId"] }
         next if h.nil?
 
+        next if (s["matchCount"] || 0) < 5000
+
         {
           name: h["displayName"],
           id: s["heroId"],
@@ -85,8 +73,10 @@ module TelegramDotaStatsBot
 
     def parse_hero_details(json, hero_id)
       data = JSON.parse(json)
+
+      current_patch = "7.41b"
+
       hero_c = data.dig("data", "constants", "hero")
-      version = data.dig("data", "constants", "gameVersion", "name")
       stats_array = data.dig("data", "heroStats", "stats") || []
       hero_s = stats_array.first
 
@@ -95,9 +85,10 @@ module TelegramDotaStatsBot
       {
         id: hero_id,
         name: hero_c["displayName"],
-        patch: version || "Unknown",
+        patch: current_patch,
         win_rate: calculate_win_rate(hero_s["matchCount"], hero_s["winCount"]),
         match_count: hero_s["matchCount"],
+        rank_text: "💠 Divine / Immortal",
         image_url: "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/#{hero_c["shortName"]}.png"
       }
     end

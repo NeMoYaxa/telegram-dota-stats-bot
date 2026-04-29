@@ -64,22 +64,20 @@ module TelegramDotaStatsBot
         "➖➖➖➖➖➖➖➖➖➖➖➖",
         "🏆 <b>Winrate:</b> <code>#{hero_data[:win_rate]}%</code>",
         "🎮 <b>Матчей:</b> <code>#{hero_data[:match_count]}</code>",
-        "🏅 <b>Ранг:</b> 💠 Divine / Immortal",
+        "🏅 <b>Ранг:</b> #{hero_data[:rank_text]}",
         "➖➖➖➖➖➖➖➖➖➖➖➖",
-        "🔗 <a href='https://stratz.com/heroes/#{hero_data[:id]}'>Stratz Profile</a>"
+        "🔗 <a href='https://stratz.com/heroes/#{hero_data[:id]}'>Открыть на Stratz</a>"
       ].join("\n")
     end
 
     def self.positions_menu
-      buttons = (1..5).map do |i|
-        Telegram::Bot::Types::KeyboardButton.new(text: "Позиция #{i}")
-      end
-      keyboard_rows = buttons.each_slice(2).to_a
-      Telegram::Bot::Types::ReplyKeyboardMarkup.new(
-        keyboard: keyboard_rows,
-        resize_keyboard: true,
-        one_time_keyboard: true
-      )
+      kb = [
+        [button("Carry (Pos 1)"), button("Midlane (Pos 2)")],
+        [button("Offlane (Pos 3)"), button("Soft Support (Pos 4)")],
+        [button("Hard Support (Pos 5)")],
+        [button("⬅️ В главное меню")]
+      ]
+      Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: kb, resize_keyboard: true)
     end
   end
 end

@@ -19,7 +19,7 @@ module TelegramDotaStatsBot
           "User-Agent" => "TelegramDotaStatsBot/1.0"
         },
         body: { query: gql }.to_json,
-        timeout: 25
+        timeout: 60
       )
 
       return response if response.success? && response.body && !response.body.empty?

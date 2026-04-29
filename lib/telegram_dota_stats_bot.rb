@@ -84,8 +84,8 @@ module TelegramDotaStatsBot
               reply_markup: View.positions_menu
             )
 
-          when /^Позиция (\d)$/
-            pos = Regexp.last_match(1).to_i
+          when "Carry (Pos 1)", "Midlane (Pos 2)", "Offlane (Pos 3)", "Soft Support (Pos 4)", "Hard Support (Pos 5)"
+            pos = message.text.match(/\d/)[0].to_i
             heroes = Hero.new.fetch_recommended(pos)
             kb = heroes.map do |h|
               [Telegram::Bot::Types::InlineKeyboardButton.new(
@@ -95,7 +95,13 @@ module TelegramDotaStatsBot
             end
             markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: kb)
             bot.api.send_message(chat_id: message.chat.id, text: "Топ-3 героя на позицию #{pos}:", reply_markup: markup)
-
+          when "⬅️ В главное меню"
+            @states[message.from.id] = nil
+            bot.api.send_message(
+              chat_id: message.chat.id,
+              text: "Возвращаемся в главное меню",
+              reply_markup: View.main_menu
+            )
           else
             case @states[message.from.id]
             when :waiting_player_id
