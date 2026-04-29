@@ -40,6 +40,12 @@ module TelegramDotaStatsBot
 
         case message
         when Telegram::Bot::Types::CallbackQuery
+          begin
+            bot.api.answer_callback_query(callback_query_id: message.id)
+          rescue StandardError => e
+            log.error("Ошибка при ответе на callback: #{e.message}")
+          end
+
           if message.data.start_with?("hero_")
             hero_id = message.data.split("_").last
             hero_data = Hero.new.fetch_hero_details(hero_id)
@@ -50,7 +56,6 @@ module TelegramDotaStatsBot
               parse_mode: "HTML"
             )
           end
-          bot.api.answer_callback_query(callback_query_id: message.id)
 
         when Telegram::Bot::Types::Message
           case message.text
@@ -71,7 +76,7 @@ module TelegramDotaStatsBot
             @states[message.from.id] = :waiting_match_id
             bot.api.send_message(chat_id: message.chat.id, text: "Введите id матча:")
 
-          when "🦸 Топ героев по позициям"
+          when "🦸 Выбор героя (Топ по позициям)"
             log.info("#{user_info} выбрал просмотр позиций")
             bot.api.send_message(
               chat_id: message.chat.id,

@@ -19,9 +19,9 @@ module TelegramDotaStatsBot
       query = <<~GQL
         {
           heroStats {
-            stats(bracketIds: [DIVINE_IMMORTAL], positionIds: [POSITION_#{position_id}]) {
+            stats(bracketBasicIds: [DIVINE_IMMORTAL], positionIds: [POSITION_#{position_id}]) {
               heroId
-              winGameCount
+              winCount
               matchCount
             }
           }
@@ -32,6 +32,8 @@ module TelegramDotaStatsBot
       GQL
 
       response = Client.query(query)
+      return [] if response.nil? || response.body.nil? || response.body.empty?
+
       parse_recommended(response.body)
     end
 
@@ -43,19 +45,21 @@ module TelegramDotaStatsBot
               displayName
               shortName
             }
+            gameVersion { name }
           }
           heroStats {
-            hero(id: #{hero_id}) {
-              winGameCount
+            stats(heroIds: [#{hero_id}], bracketBasicIds: [DIVINE_IMMORTAL]) {
+              winCount
               matchCount
-              itemBootPurchase { itemId }
             }
           }
         }
       GQL
 
       response = Client.query(query)
-      parse_hero_details(response.body)
+      return nil if response.nil? || response.body.nil? || response.body.empty?
+
+      parse_hero_details(response.body, hero_id)
     end
 
     private
@@ -67,26 +71,34 @@ module TelegramDotaStatsBot
 
       recommended = stats.map do |s|
         h = heroes_const.find { |hc| hc["id"] == s["heroId"] }
+        next if h.nil?
+
         {
           name: h["displayName"],
           id: s["heroId"],
-          win_rate: calculate_win_rate(s["matchCount"], s["winGameCount"])
+          win_rate: calculate_win_rate(s["matchCount"], s["winCount"])
         }
-      end
+      end.compact
 
       recommended.sort_by { |h| -h[:win_rate] }.first(3)
     end
 
-    def parse_hero_details(json)
+    def parse_hero_details(json, hero_id)
       data = JSON.parse(json)
       hero_c = data.dig("data", "constants", "hero")
-      hero_s = data.dig("data", "heroStats", "hero")
+      version = data.dig("data", "constants", "gameVersion", "name")
+      stats_array = data.dig("data", "heroStats", "stats") || []
+      hero_s = stats_array.first
+
+      return nil if hero_c.nil? || hero_s.nil?
 
       {
+        id: hero_id,
         name: hero_c["displayName"],
-        icon_url: "https://cdn.stratz.com/images/dota2/heroes/#{hero_c["shortName"]}_horiz.png",
-        win_rate: calculate_win_rate(hero_s["matchCount"], hero_s["winGameCount"]),
-        suggested_boots_id: hero_s.dig("itemBootPurchase", 0, "itemId")
+        patch: version || "Unknown",
+        win_rate: calculate_win_rate(hero_s["matchCount"], hero_s["winCount"]),
+        match_count: hero_s["matchCount"],
+        image_url: "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/#{hero_c["shortName"]}.png"
       }
     end
   end

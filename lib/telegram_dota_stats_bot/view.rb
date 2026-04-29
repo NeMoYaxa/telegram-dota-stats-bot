@@ -55,17 +55,31 @@ module TelegramDotaStatsBot
     end
 
     def self.render_hero_stats(hero_data)
+      return "⚠️ Ошибка: данные героя не найдены." if hero_data.nil?
+
       [
-        "<b>#{hero_data[:name]}</b>",
-        "📈 Винрейт: #{hero_data[:win_rate]}%",
-        "👟 Рекомендованный предмет: <code>ID #{hero_data[:suggested_boots_id]}</code>",
-        "<a href='#{hero_data[:icon_url]}'>&#8205;</a>" # Фокус, чтобы картинка отобразилась
+        "<a href='#{hero_data[:image_url]}'>&#8205;</a>",
+        "🦸 <b>#{hero_data[:name]}</b>",
+        "📅 <b>Патч:</b> <code>#{hero_data[:patch]}</code>",
+        "➖➖➖➖➖➖➖➖➖➖➖➖",
+        "🏆 <b>Winrate:</b> <code>#{hero_data[:win_rate]}%</code>",
+        "🎮 <b>Матчей:</b> <code>#{hero_data[:match_count]}</code>",
+        "🏅 <b>Ранг:</b> 💠 Divine / Immortal",
+        "➖➖➖➖➖➖➖➖➖➖➖➖",
+        "🔗 <a href='https://stratz.com/heroes/#{hero_data[:id]}'>Stratz Profile</a>"
       ].join("\n")
     end
 
     def self.positions_menu
-      kb = (1..5).map { |i| [button("Позиция #{i}")] }
-      Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: kb, resize_keyboard: true)
+      buttons = (1..5).map do |i|
+        Telegram::Bot::Types::KeyboardButton.new(text: "Позиция #{i}")
+      end
+      keyboard_rows = buttons.each_slice(2).to_a
+      Telegram::Bot::Types::ReplyKeyboardMarkup.new(
+        keyboard: keyboard_rows,
+        resize_keyboard: true,
+        one_time_keyboard: true
+      )
     end
   end
 end
