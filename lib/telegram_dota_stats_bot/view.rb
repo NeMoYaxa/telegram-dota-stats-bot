@@ -11,7 +11,7 @@ module TelegramDotaStatsBot
         [button("👤 Посмотреть профиль игрока")],
         [button("📊 Посмотреть статистику матча")],
         [button("🦸 Выбор героя (Топ по позициям)")],
-        [button("🔧 Сборка на героя")],  # НОВАЯ КНОПКА
+        [button("🔧 Сборка на героя")],
         [button("⬅️ В главное меню")]
       ]
 
@@ -32,7 +32,6 @@ module TelegramDotaStatsBot
       Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: kb, resize_keyboard: true)
     end
 
-
     def self.hero_build_menu(heroes_list)
       buttons = heroes_list.map do |hero|
         Telegram::Bot::Types::InlineKeyboardButton.new(
@@ -44,7 +43,6 @@ module TelegramDotaStatsBot
       keyboard = buttons.each_slice(3).to_a
       Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: keyboard)
     end
-
 
     def self.render_build_stats(hero_name, best_items)
       return "⚠️ Ошибка: данные сборки не найдены." if best_items.nil? || best_items.empty?
@@ -64,7 +62,7 @@ module TelegramDotaStatsBot
       text
     end
 
-    # ОСТАЛЬНЫЕ МЕТОДЫ БЕЗ ИЗМЕНЕНИЙ
+
     def self.render_player_stats(player_data)
       line = "➖➖➖➖➖➖➖➖➖➖➖➖"
 

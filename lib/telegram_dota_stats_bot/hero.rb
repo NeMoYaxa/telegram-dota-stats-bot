@@ -29,7 +29,6 @@ module TelegramDotaStatsBot
       parse_recommended(response.body)
     end
 
-
     def fetch_hero_details(hero_id)
       query = <<~GQL
         {
@@ -51,7 +50,6 @@ module TelegramDotaStatsBot
       parse_hero_details(response.body, hero_id)
     end
 
-
     def fetch_all_heroes
       query = <<~GQL
         {
@@ -70,7 +68,6 @@ module TelegramDotaStatsBot
 
       parse_all_heroes(response.body)
     end
-
 
     def fetch_hero_build(hero_id)
       query = <<~GQL
@@ -159,7 +156,6 @@ module TelegramDotaStatsBot
         }
       end.sort_by { |h| h[:name] }
     end
-
     def parse_hero_build(json)
       data = JSON.parse(json)
 
@@ -201,18 +197,16 @@ module TelegramDotaStatsBot
 
       intervals.each do |interval|
         interval_purchases = purchases.select do |p|
-          p["time"] >= interval[:min] && p["time"] <= interval[:max]
+          p["time"].between?(interval[:min], interval[:max])
         end
 
         next if interval_purchases.empty?
 
         best = interval_purchases
-                 .reject { |p| used_items.include?(p["itemId"]) }
-                 .max_by { |p| p["winsAverage"] }
+               .reject { |p| used_items.include?(p["itemId"]) }
+               .max_by { |p| p["winsAverage"] }
 
-        if best.nil?
-          best = interval_purchases.max_by { |p| p["winsAverage"] }
-        end
+        best = interval_purchases.max_by { |p| p["winsAverage"] } if best.nil?
 
         used_items << best["itemId"]
 
