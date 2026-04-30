@@ -148,14 +148,16 @@ module TelegramDotaStatsBot
       data = JSON.parse(json)
       heroes = data.dig("data", "constants", "heroes") || []
 
-      heroes.map do |hero|
+      result = heroes.map do |hero|
         {
           id: hero["id"],
           name: hero["displayName"],
           short_name: hero["shortName"]
         }
-      end.sort_by { |h| h[:name] }
+      end
+      result.sort_by { |h| h[:name] }
     end
+
     def parse_hero_build(json)
       data = JSON.parse(json)
 

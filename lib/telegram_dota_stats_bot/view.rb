@@ -62,7 +62,6 @@ module TelegramDotaStatsBot
       text
     end
 
-
     def self.render_player_stats(player_data)
       line = "➖➖➖➖➖➖➖➖➖➖➖➖"
 
