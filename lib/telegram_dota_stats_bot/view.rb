@@ -10,7 +10,9 @@ module TelegramDotaStatsBot
       kb = [
         [button("👤 Посмотреть профиль игрока")],
         [button("📊 Посмотреть статистику матча")],
-        [button("🦸 Выбор героя (Топ по позициям)")]
+        [button("🦸 Выбор героя (Топ по позициям)")],
+        [button("🔧 Сборка на героя")],
+        [button("⬅️ В главное меню")]
       ]
 
       Telegram::Bot::Types::ReplyKeyboardMarkup.new(
@@ -18,6 +20,46 @@ module TelegramDotaStatsBot
         resize_keyboard: true,
         one_time_keyboard: true
       )
+    end
+
+    def self.positions_menu
+      kb = [
+        [button("Carry (Pos 1)"), button("Midlane (Pos 2)")],
+        [button("Offlane (Pos 3)"), button("Soft Support (Pos 4)")],
+        [button("Hard Support (Pos 5)")],
+        [button("⬅️ В главное меню")]
+      ]
+      Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: kb, resize_keyboard: true)
+    end
+
+    def self.hero_build_menu(heroes_list)
+      buttons = heroes_list.map do |hero|
+        Telegram::Bot::Types::InlineKeyboardButton.new(
+          text: hero[:name],
+          callback_data: "build_#{hero[:id]}"
+        )
+      end
+
+      keyboard = buttons.each_slice(3).to_a
+      Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: keyboard)
+    end
+
+    def self.render_build_stats(hero_name, best_items)
+      return "⚠️ Ошибка: данные сборки не найдены." if best_items.nil? || best_items.empty?
+
+      text = "🔧 <b>Лучшая сборка для #{hero_name}</b>\n\n"
+      text += "📊 <b>Рекомендации по времени покупки предметов:</b>\n\n"
+
+      best_items.each do |item|
+        text += "⏱ <b>#{item[:interval]} мин:</b>\n"
+        text += "   📦 Предмет: <code>#{item[:item_name]}</code>\n"
+        text += "   🏆 Винрейт: <code>#{item[:winrate]}%</code>\n\n"
+      end
+
+      text += "➖➖➖➖➖➖➖➖➖➖➖➖\n"
+      text += "💡 <i>Совет: Покупай предметы в указанное время для максимальной эффективности!</i>"
+
+      text
     end
 
     def self.render_player_stats(player_data)
@@ -68,16 +110,6 @@ module TelegramDotaStatsBot
         "➖➖➖➖➖➖➖➖➖➖➖➖",
         "🔗 <a href='https://stratz.com/heroes/#{hero_data[:id]}'>Открыть на Stratz</a>"
       ].join("\n")
-    end
-
-    def self.positions_menu
-      kb = [
-        [button("Carry (Pos 1)"), button("Midlane (Pos 2)")],
-        [button("Offlane (Pos 3)"), button("Soft Support (Pos 4)")],
-        [button("Hard Support (Pos 5)")],
-        [button("⬅️ В главное меню")]
-      ]
-      Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: kb, resize_keyboard: true)
     end
   end
 end

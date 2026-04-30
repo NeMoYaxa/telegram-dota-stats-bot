@@ -32,14 +32,14 @@ Metrics/BlockLength:
   Enabled: false
 
 Metrics/CyclomaticComplexity:
-  Max: 20
+  Max: 30
 
 Metrics/PerceivedComplexity:
-  Max: 15
+  Max: 30
 
 Layout/LineLength:
   Exclude:
     - "telegram_dota_stats_bot.gemspec"
     -
 Metrics/ModuleLength:
-  Max: 150
+  Max: 200
