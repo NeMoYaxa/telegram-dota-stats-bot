@@ -6,9 +6,6 @@ require_relative "stats_info"
 module TelegramDotaStatsBot
   class Hero
     include StatsInfo
-
-
-
     def fetch_recommended(position_id)
       query = <<~GQL
         {
