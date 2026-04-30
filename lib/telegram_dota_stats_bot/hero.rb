@@ -96,7 +96,7 @@ module TelegramDotaStatsBot
 
       parse_hero_build(response.body)
     end
-    
+
     private
 
     def parse_recommended(json)
