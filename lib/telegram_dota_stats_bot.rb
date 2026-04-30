@@ -33,6 +33,9 @@ module TelegramDotaStatsBot
     log.info("Бот запущен")
     puts "Бот запущен"
 
+    @heroes_cache = nil
+    @cache_time = nil
+
     Telegram::Bot::Client.run(token) do |bot|
       bot.listen do |message|
         user_info = "#{message.from.id} (@#{message.from.username})"
@@ -55,6 +58,24 @@ module TelegramDotaStatsBot
               text: View.render_hero_stats(hero_data),
               parse_mode: "HTML"
             )
+
+          elsif message.data.start_with?("build_")
+            hero_id = message.data.split("_").last
+            hero_build = Hero.new.fetch_hero_build(hero_id)
+
+            if hero_build
+              bot.api.send_message(
+                chat_id: message.message.chat.id,
+                text: View.render_build_stats(hero_build[:name], hero_build[:best_items]),
+                parse_mode: "HTML"
+              )
+            else
+              bot.api.send_message(
+                chat_id: message.message.chat.id,
+                text: "❌ Не удалось загрузить сборку для этого героя",
+                parse_mode: "HTML"
+              )
+            end
           end
 
         when Telegram::Bot::Types::Message
@@ -84,6 +105,29 @@ module TelegramDotaStatsBot
               reply_markup: View.positions_menu
             )
 
+          when "🔧 Сборка на героя"
+            log.info("#{user_info} выбрал '🔧 Сборка на героя'")
+
+            if @heroes_cache.nil? || Time.now - @cache_time > 3600
+              log.info("Загрузка списка героев...")
+              @heroes_cache = Hero.new.fetch_all_heroes
+              @cache_time = Time.now
+            end
+
+            if @heroes_cache.empty?
+              bot.api.send_message(
+                chat_id: message.chat.id,
+                text: "❌ Не удалось загрузить список героев. Попробуйте позже.",
+                reply_markup: View.main_menu
+              )
+            else
+              bot.api.send_message(
+                chat_id: message.chat.id,
+                text: "🎮 Выбери героя, для которого хочешь посмотреть сборку:",
+                reply_markup: View.hero_build_menu(@heroes_cache)
+              )
+            end
+
           when "Carry (Pos 1)", "Midlane (Pos 2)", "Offlane (Pos 3)", "Soft Support (Pos 4)", "Hard Support (Pos 5)"
             pos = message.text.match(/\d/)[0].to_i
             heroes = Hero.new.fetch_recommended(pos)
@@ -95,6 +139,7 @@ module TelegramDotaStatsBot
             end
             markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: kb)
             bot.api.send_message(chat_id: message.chat.id, text: "Топ-3 героя на позицию #{pos}:", reply_markup: markup)
+
           when "⬅️ В главное меню"
             @states[message.from.id] = nil
             bot.api.send_message(
@@ -102,6 +147,7 @@ module TelegramDotaStatsBot
               text: "Возвращаемся в главное меню",
               reply_markup: View.main_menu
             )
+
           else
             case @states[message.from.id]
             when :waiting_player_id
