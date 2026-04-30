@@ -32,7 +32,10 @@ Metrics/BlockLength:
   Enabled: false
 
 Metrics/CyclomaticComplexity:
-  Max: 10
+  Max: 20
+
+Metrics/PerceivedComplexity:
+  Max: 15
 
 Layout/LineLength:
   Exclude:

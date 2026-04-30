@@ -4,6 +4,12 @@ require_relative "client"
 
 module TelegramDotaStatsBot
   module StatsInfo
+    def calculate_win_rate(total, wins)
+      return 0 if total.nil? || total.zero?
+
+      ((wins.to_f / total) * 100).round(2)
+    end
+
     def match_duration_to_string_time(seconds)
       return nil if seconds.nil?
 
@@ -58,6 +64,8 @@ module TelegramDotaStatsBot
       GQL
 
       response = Client.query(query)
+
+      return nil if response.nil?
 
       response.body
     end

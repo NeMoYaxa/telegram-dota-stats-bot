@@ -9,7 +9,8 @@ module TelegramDotaStatsBot
     def self.main_menu
       kb = [
         [button("👤 Посмотреть профиль игрока")],
-        [button("📊 Посмотреть статистику матча")]
+        [button("📊 Посмотреть статистику матча")],
+        [button("🦸 Выбор героя (Топ по позициям)")]
       ]
 
       Telegram::Bot::Types::ReplyKeyboardMarkup.new(
@@ -51,6 +52,32 @@ module TelegramDotaStatsBot
         "📅 <b>Начало:</b> #{match_data[:startDateTime]}",
         "🏁 <b>Конец:</b>  #{match_data[:endDateTime]}"
       ].join("\n")
+    end
+
+    def self.render_hero_stats(hero_data)
+      return "⚠️ Ошибка: данные героя не найдены." if hero_data.nil?
+
+      [
+        "<a href='#{hero_data[:image_url]}'>&#8205;</a>",
+        "🦸 <b>#{hero_data[:name]}</b>",
+        "📅 <b>Патч:</b> <code>#{hero_data[:patch]}</code>",
+        "➖➖➖➖➖➖➖➖➖➖➖➖",
+        "🏆 <b>Winrate:</b> <code>#{hero_data[:win_rate]}%</code>",
+        "🎮 <b>Матчей:</b> <code>#{hero_data[:match_count]}</code>",
+        "🏅 <b>Ранг:</b> #{hero_data[:rank_text]}",
+        "➖➖➖➖➖➖➖➖➖➖➖➖",
+        "🔗 <a href='https://stratz.com/heroes/#{hero_data[:id]}'>Открыть на Stratz</a>"
+      ].join("\n")
+    end
+
+    def self.positions_menu
+      kb = [
+        [button("Carry (Pos 1)"), button("Midlane (Pos 2)")],
+        [button("Offlane (Pos 3)"), button("Soft Support (Pos 4)")],
+        [button("Hard Support (Pos 5)")],
+        [button("⬅️ В главное меню")]
+      ]
+      Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: kb, resize_keyboard: true)
     end
   end
 end
